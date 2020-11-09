@@ -9,6 +9,9 @@ public class TextEditor extends JFrame {
 
     private final JButton saveButton;
     private final JButton loadButton;
+    private final JButton searchButton;
+    private final JButton backArrow;
+    private final JButton forwardArrow;
     private final JTextField textField;
     private final JTextArea textArea;
 
@@ -22,33 +25,66 @@ public class TextEditor extends JFrame {
         topPanel.setPreferredSize(new Dimension(800, 70));
         topPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         FlowLayout flowLayout = new FlowLayout();
-        flowLayout.setHgap(30);
+        flowLayout.setHgap(20);
         flowLayout.setVgap(20);
         topPanel.setLayout(flowLayout);
 
+        //creates ImageIcon and resizes it to fit JButton
+        ImageIcon saveIcon = new ImageIcon("save-icon.png");
+        Image imgS = saveIcon.getImage();
+        Image newSaveImg = imgS.getScaledInstance(45, 45, Image.SCALE_SMOOTH);
+        saveIcon = new ImageIcon(newSaveImg);
+
+        saveButton = new JButton(saveIcon);
+        saveButton.setName("SaveButton");
+        //saveButton.setText("Save");
+        saveButton.setPreferredSize(new Dimension(45, 45));
+        topPanel.add(saveButton);
+
+        //saveFile();
+
+        //creates ImageIcon and resizes it to fit JButton
+        ImageIcon loadIcon = new ImageIcon("open-icon.png");
+        Image imgL = loadIcon.getImage();
+        Image newLoadImg = imgL.getScaledInstance(45, 45, Image.SCALE_SMOOTH);
+        loadIcon = new ImageIcon(newLoadImg);
+
+        loadButton = new JButton(loadIcon);
+        loadButton.setName("OpenButton");
+        //loadButton.setText("Load");
+        loadButton.setPreferredSize(new Dimension(45, 45));
+        topPanel.add(loadButton);
+
+        //loadFile();
+
         textField = new JTextField();
-        textField.setName("FilenameField");
-        textField.setPreferredSize(new Dimension(200, 40));
+        textField.setName("SearchField");
+        textField.setPreferredSize(new Dimension(200, 45));
         textField.setFont(new Font("Arial", Font.PLAIN, 20));
         topPanel.add(textField);
 
-        saveButton = new JButton();
-        saveButton.setName("SaveButton");
-        saveButton.setText("Save");
-        saveButton.setFont(new Font("Arial", Font.BOLD, 20));
-        saveButton.setPreferredSize(new Dimension(200, 40));
-        topPanel.add(saveButton);
+        //creates ImageIcon and resizes it to fit JButton
+        ImageIcon searchIcon = new ImageIcon("search-icon.png");
+        Image imgSr = searchIcon.getImage();
+        Image newSearchImg = imgSr.getScaledInstance(45, 45, Image.SCALE_SMOOTH);
+        searchIcon = new ImageIcon(newSearchImg);
 
-        saveFile();
+        searchButton = new JButton(searchIcon);
+        searchButton.setName("StartSearchButton");
+        searchButton.setPreferredSize(new Dimension(45, 45));
+        topPanel.add(searchButton);
 
-        loadButton = new JButton();
-        loadButton.setName("LoadButton");
-        loadButton.setText("Load");
-        loadButton.setFont(new Font("Arial", Font.BOLD, 20));
-        loadButton.setPreferredSize(new Dimension(200, 40));
-        topPanel.add(loadButton);
+        backArrow = new JButton();
+        backArrow.setName("PreviousMatchButton");
+        backArrow.setText("<");
+        backArrow.setFont(new Font("Arial", Font.BOLD, 30));
+        topPanel.add(backArrow);
 
-        loadFile();
+        forwardArrow = new JButton();
+        forwardArrow.setName("NextMatchButton");
+        forwardArrow.setText(">");
+        forwardArrow.setFont(new Font("Arial", Font.BOLD, 30));
+        topPanel.add(forwardArrow);
 
         JPanel textAreaPanel = new JPanel();
         FlowLayout flowLayout1 = new FlowLayout();
@@ -75,8 +111,8 @@ public class TextEditor extends JFrame {
         fileMenu.setMnemonic(KeyEvent.VK_F);
         fileMenu.setFont(new Font("Arial", Font.BOLD, 25));
 
-        JMenuItem loadMenuItem = new JMenuItem("Load");
-        loadMenuItem.setName("MenuLoad");
+        JMenuItem loadMenuItem = new JMenuItem("Open");
+        loadMenuItem.setName("MenuOpen");
         loadMenuItem.setFont(new Font("Arial", Font.PLAIN, 20));
         fileMenu.add(loadMenuItem);
         loadMenuItem.addActionListener(actionEvent -> {
@@ -100,7 +136,37 @@ public class TextEditor extends JFrame {
             System.exit(0);
         });
 
+        JMenu searchMenu = new JMenu("Search");
+        searchMenu.setName("MenuSearch");
+        searchMenu.setMnemonic(KeyEvent.VK_S);
+        searchMenu.setFont(new Font("Arial", Font.BOLD, 25));
+
+        JMenuItem startSearchItem = new JMenuItem("Start search");
+        startSearchItem.setName("MenuStartSearch");
+        startSearchItem.setFont(new Font("Arial", Font.PLAIN, 20));
+        searchMenu.add(startSearchItem);
+        startSearchItem.addActionListener(actionEvent -> {
+            searchButton.doClick();
+        });
+
+        JMenuItem previousSearchItem = new JMenuItem("Previous search");
+        previousSearchItem.setName("MenuPreviousMatch");
+        previousSearchItem.setFont(new Font("Arial", Font.PLAIN, 20));
+        searchMenu.add(previousSearchItem);
+        previousSearchItem.addActionListener(actionEvent -> {
+            backArrow.doClick();
+        });
+
+        JMenuItem nextMatchItem = new JMenuItem("Next match");
+        nextMatchItem.setName("MenuNextMatch");
+        nextMatchItem.setFont(new Font("Arial", Font.PLAIN, 20));
+        searchMenu.add(nextMatchItem);
+        nextMatchItem.addActionListener(actionEvent -> {
+            forwardArrow.doClick();
+        });
+
         menuBar.add(fileMenu);
+        menuBar.add(searchMenu);
         add(topPanel, BorderLayout.NORTH);
         add(textAreaPanel, BorderLayout.CENTER);
 
@@ -108,7 +174,7 @@ public class TextEditor extends JFrame {
 
     }
 
-    private void saveFile() {
+    /*private void saveFile() {
         if (textField.getText() == null) {
             throw new IllegalArgumentException("filename cannot be null");
         }
@@ -150,5 +216,5 @@ public class TextEditor extends JFrame {
             }
         });
     }
-
+*/
 }
