@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TextEditor extends JFrame {
 
@@ -11,9 +13,12 @@ public class TextEditor extends JFrame {
     private final JButton loadButton;
     private final JButton searchButton;
     private final JButton backArrow;
+    private final JButton regex;
     private final JButton forwardArrow;
     private final JTextField textField;
     private final JTextArea textArea;
+    private final JFileChooser fileChooser = new JFileChooser();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public TextEditor() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -25,7 +30,7 @@ public class TextEditor extends JFrame {
         topPanel.setPreferredSize(new Dimension(800, 70));
         topPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         FlowLayout flowLayout = new FlowLayout();
-        flowLayout.setHgap(20);
+        flowLayout.setHgap(15);
         flowLayout.setVgap(20);
         topPanel.setLayout(flowLayout);
 
@@ -37,11 +42,10 @@ public class TextEditor extends JFrame {
 
         saveButton = new JButton(saveIcon);
         saveButton.setName("SaveButton");
-        //saveButton.setText("Save");
         saveButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(saveButton);
 
-        //saveFile();
+        chooserSaveFile();
 
         //creates ImageIcon and resizes it to fit JButton
         ImageIcon loadIcon = new ImageIcon("open-icon.png");
@@ -51,11 +55,10 @@ public class TextEditor extends JFrame {
 
         loadButton = new JButton(loadIcon);
         loadButton.setName("OpenButton");
-        //loadButton.setText("Load");
         loadButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(loadButton);
 
-        //loadFile();
+        chooserLoadFile();
 
         textField = new JTextField();
         textField.setName("SearchField");
@@ -85,6 +88,11 @@ public class TextEditor extends JFrame {
         forwardArrow.setText(">");
         forwardArrow.setFont(new Font("Arial", Font.BOLD, 30));
         topPanel.add(forwardArrow);
+
+        regex = new JButton("Regex");
+        regex.setFont(new Font("Arial", Font.BOLD, 30));
+        topPanel.add(regex);
+
 
         JPanel textAreaPanel = new JPanel();
         FlowLayout flowLayout1 = new FlowLayout();
@@ -165,6 +173,14 @@ public class TextEditor extends JFrame {
             forwardArrow.doClick();
         });
 
+        JMenuItem regexItem = new JMenuItem("Use regular expressions");
+        regexItem.setName("MenuUseRegex");
+        regexItem.setFont(new Font("Arial", Font.PLAIN, 20));
+        searchMenu.add(regexItem);
+        regexItem.addActionListener(actionEvent -> {
+            regex.doClick();
+        });
+
         menuBar.add(fileMenu);
         menuBar.add(searchMenu);
         add(topPanel, BorderLayout.NORTH);
@@ -174,47 +190,54 @@ public class TextEditor extends JFrame {
 
     }
 
-    /*private void saveFile() {
-        if (textField.getText() == null) {
-            throw new IllegalArgumentException("filename cannot be null");
-        }
+    private void chooserSaveFile() {
         saveButton.addActionListener(actionEvent -> {
-            String fileName = textField.getText();
-            if (fileName != null) {
-                try (FileWriter fileWriter = new FileWriter(fileName);
-                     BufferedWriter bw = new BufferedWriter(fileWriter)) {
-                    textArea.write(bw);
-                    textArea.requestFocusInWindow();
+            Runnable save = () -> {
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                int response = fileChooser.showOpenDialog(null);
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (response == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+
+                    try (FileWriter fileWriter = new FileWriter(file);
+                         BufferedWriter bw = new BufferedWriter(fileWriter)) {
+                        textArea.write(bw);
+                        textArea.requestFocusInWindow();
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                 }
-            }
+            };
+            executorService.submit(save);
         });
     }
 
-    private void loadFile() {
-        if (textField.getText() == null) {
-            throw new IllegalArgumentException("filename cannot be null");
-        }
-
+    private void chooserLoadFile() {
         loadButton.addActionListener(actionEvent -> {
-            String fileName = textField.getText();
-            File file = new File(fileName);
+            Runnable load = () -> {
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                int response = fileChooser.showOpenDialog(null);
 
-            if (!file.exists()) {
-                textArea.setText("");
-                return;
-            }
-
-            try (FileReader fileReader = new FileReader(fileName);
-                 BufferedReader br = new BufferedReader(fileReader)) {
-                textArea.read(br, null);
-                textArea.requestFocusInWindow();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                if (response == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    if (!file.exists()) {
+                        textArea.setText("");
+                        return;
+                    }
+                    if (file.isFile()) {
+                        try (FileReader fileReader = new FileReader(file);
+                             BufferedReader br = new BufferedReader(fileReader)) {
+                            textArea.read(br, null);
+                            textArea.requestFocusInWindow();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+            executorService.submit(load);
         });
     }
-*/
 }
