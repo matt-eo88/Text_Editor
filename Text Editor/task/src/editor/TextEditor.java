@@ -4,8 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class TextEditor extends JFrame {
 
@@ -17,10 +21,18 @@ public class TextEditor extends JFrame {
     private final JButton forwardArrow;
     private final JTextField textField;
     private final JTextArea textArea;
-    private final JFileChooser fileChooser = new JFileChooser();
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final JFileChooser fileChooser;
+    private final ExecutorService executorService;
+    private boolean isChecked = false;
+    private ArrayList<Integer> indexFound;
+    private ArrayList<Integer> lengthFound;
+    private int counter = 0;
+    private int nextCounter = 0;
 
     public TextEditor() {
+        fileChooser = new JFileChooser();
+        executorService = Executors.newSingleThreadExecutor();
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 620);
         setTitle("TextArea");
@@ -45,8 +57,6 @@ public class TextEditor extends JFrame {
         saveButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(saveButton);
 
-        chooserSaveFile();
-
         //creates ImageIcon and resizes it to fit JButton
         ImageIcon loadIcon = new ImageIcon("open-icon.png");
         Image imgL = loadIcon.getImage();
@@ -57,8 +67,6 @@ public class TextEditor extends JFrame {
         loadButton.setName("OpenButton");
         loadButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(loadButton);
-
-        chooserLoadFile();
 
         textField = new JTextField();
         textField.setName("SearchField");
@@ -89,10 +97,9 @@ public class TextEditor extends JFrame {
         forwardArrow.setFont(new Font("Arial", Font.BOLD, 30));
         topPanel.add(forwardArrow);
 
-        regex = new JButton("Regex");
+        regex = new JButton("REGEX");
         regex.setFont(new Font("Arial", Font.BOLD, 30));
         topPanel.add(regex);
-
 
         JPanel textAreaPanel = new JPanel();
         FlowLayout flowLayout1 = new FlowLayout();
@@ -174,7 +181,7 @@ public class TextEditor extends JFrame {
         });
 
         JMenuItem regexItem = new JMenuItem("Use regular expressions");
-        regexItem.setName("MenuUseRegex");
+        regexItem.setName("MenuUseRegExp");
         regexItem.setFont(new Font("Arial", Font.PLAIN, 20));
         searchMenu.add(regexItem);
         regexItem.addActionListener(actionEvent -> {
@@ -186,15 +193,25 @@ public class TextEditor extends JFrame {
         add(topPanel, BorderLayout.NORTH);
         add(textAreaPanel, BorderLayout.CENTER);
 
-        setVisible(true);
+        createListeners();
 
+        setVisible(true);
+    }
+
+    private void createListeners() {
+        chooserSaveFile();
+        chooserLoadFile();
+        searchEngine();
+        prevSearch();
+        nextSearch();
+        isRegex();
     }
 
     private void chooserSaveFile() {
         saveButton.addActionListener(actionEvent -> {
             Runnable save = () -> {
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                int response = fileChooser.showOpenDialog(null);
+                int response = fileChooser.showSaveDialog(null);
 
                 if (response == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
@@ -240,4 +257,91 @@ public class TextEditor extends JFrame {
             executorService.submit(load);
         });
     }
+
+    private void isRegex() {
+        regex.addActionListener(actionEvent -> {
+            isChecked = !isChecked;
+            if (isChecked) {
+                regex.setBackground(Color.GREEN);
+            } else {
+                regex.setBackground(Color.LIGHT_GRAY);
+            }
+        });
+    }
+
+    private void searchEngine() {
+        searchButton.addActionListener(actionEvent -> {
+            Runnable task = () -> {
+                indexFound = new ArrayList<>();
+                lengthFound = new ArrayList<>();
+                String findText = textField.getText();
+                String allText = textArea.getText();
+                int index = -1;
+                int lengthFind = findText.length();
+
+                if (isChecked) {
+
+                    Pattern pattern = Pattern.compile(findText);
+                    Matcher matcher = pattern.matcher(allText);
+                    while (matcher.find()) {
+                        index = matcher.start();
+                        lengthFind = matcher.end() - index;
+                        indexFound.add(index);
+                        lengthFound.add(lengthFind);
+                    }
+
+                } else {
+
+                    while (true) {
+                        index = allText.indexOf(findText, index + 1);
+                        if (index == -1) {
+                            break;
+                        }
+                        indexFound.add(index);
+                        lengthFound.add(lengthFind);
+                        //System.out.println("index=" + index);
+                        //System.out.println("length=" + lengthFind);
+                    }
+                }
+            };
+            executorService.submit(task);
+        });
+    }
+
+    private void prevSearch() {
+        backArrow.addActionListener(actionEvent -> {
+            Runnable task = () -> {
+                if (counter > 0) {
+                    if (nextCounter != 0) {
+                        nextCounter--;
+                    } else {
+                        nextCounter = counter - 1;
+                    }
+                    textArea.setCaretPosition(indexFound.get(nextCounter) + lengthFound.get(nextCounter));
+                    textArea.select(indexFound.get(nextCounter), indexFound.get(nextCounter) + lengthFound.get(nextCounter));
+                    textArea.grabFocus();
+                }
+            };
+            executorService.submit(task);
+        });
+    }
+
+    private void nextSearch() {
+        forwardArrow.addActionListener(actionEvent -> {
+            Runnable task = () -> {
+                if (counter > 0) {
+                    if (counter - 1 > nextCounter) {
+                        nextCounter++;
+                    } else {
+                        nextCounter = 0;
+                    }
+                    textArea.setCaretPosition(indexFound.get(nextCounter) + lengthFound.get(nextCounter));
+                    textArea.select(indexFound.get(nextCounter), indexFound.get(nextCounter) + lengthFound.get(nextCounter));
+                    textArea.grabFocus();
+                }
+            };
+            executorService.submit(task);
+        });
+    }
+
 }
