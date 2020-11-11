@@ -5,12 +5,16 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+/**
+ * A Text Editor in swing which allows you to save and load files
+ * as well as looking for words in the text using regex
+ */
 public class TextEditor extends JFrame {
 
     private final JButton saveButton;
@@ -24,11 +28,14 @@ public class TextEditor extends JFrame {
     private final JFileChooser fileChooser;
     private final ExecutorService executorService;
     private boolean isChecked = false;
-    private ArrayList<Integer> indexFound;
-    private ArrayList<Integer> lengthFound;
+    private List<Integer> indexFound;
+    private List<Integer> lengthFound;
     private int counter = 0;
     private int nextCounter = 0;
 
+    /**
+     * initializes swing components
+     */
     public TextEditor() {
         fileChooser = new JFileChooser();
         executorService = Executors.newSingleThreadExecutor();
@@ -53,7 +60,6 @@ public class TextEditor extends JFrame {
         saveIcon = new ImageIcon(newSaveImg);
 
         saveButton = new JButton(saveIcon);
-        saveButton.setName("SaveButton");
         saveButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(saveButton);
 
@@ -64,12 +70,10 @@ public class TextEditor extends JFrame {
         loadIcon = new ImageIcon(newLoadImg);
 
         loadButton = new JButton(loadIcon);
-        loadButton.setName("OpenButton");
         loadButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(loadButton);
 
         textField = new JTextField();
-        textField.setName("SearchField");
         textField.setPreferredSize(new Dimension(200, 45));
         textField.setFont(new Font("Arial", Font.PLAIN, 20));
         topPanel.add(textField);
@@ -81,18 +85,15 @@ public class TextEditor extends JFrame {
         searchIcon = new ImageIcon(newSearchImg);
 
         searchButton = new JButton(searchIcon);
-        searchButton.setName("StartSearchButton");
         searchButton.setPreferredSize(new Dimension(45, 45));
         topPanel.add(searchButton);
 
         backArrow = new JButton();
-        backArrow.setName("PreviousMatchButton");
         backArrow.setText("<");
         backArrow.setFont(new Font("Arial", Font.BOLD, 30));
         topPanel.add(backArrow);
 
         forwardArrow = new JButton();
-        forwardArrow.setName("NextMatchButton");
         forwardArrow.setText(">");
         forwardArrow.setFont(new Font("Arial", Font.BOLD, 30));
         topPanel.add(forwardArrow);
@@ -109,9 +110,8 @@ public class TextEditor extends JFrame {
 
         textArea = new JTextArea();
         textArea.setName("TextArea");
-        textArea.setFont(new Font("Arial", Font.ITALIC, 20));
+        textArea.setFont(new Font("Arial", Font.PLAIN, 20));
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setName("ScrollPane");
         scrollPane.setPreferredSize(new Dimension(700, 400));
         scrollPane.setBorder(BorderFactory.createBevelBorder(Color.OPAQUE));
         textAreaPanel.add(scrollPane);
@@ -122,12 +122,10 @@ public class TextEditor extends JFrame {
         setJMenuBar(menuBar);
 
         JMenu fileMenu = new JMenu("File");
-        fileMenu.setName("MenuFile");
         fileMenu.setMnemonic(KeyEvent.VK_F);
         fileMenu.setFont(new Font("Arial", Font.BOLD, 25));
 
         JMenuItem loadMenuItem = new JMenuItem("Open");
-        loadMenuItem.setName("MenuOpen");
         loadMenuItem.setFont(new Font("Arial", Font.PLAIN, 20));
         fileMenu.add(loadMenuItem);
         loadMenuItem.addActionListener(actionEvent -> {
@@ -135,7 +133,6 @@ public class TextEditor extends JFrame {
         });
 
         JMenuItem saveMenuItem = new JMenuItem("Save");
-        saveMenuItem.setName("MenuSave");
         saveMenuItem.setFont(new Font("Arial", Font.PLAIN, 20));
         fileMenu.add(saveMenuItem);
         saveMenuItem.addActionListener(actionEvent -> {
@@ -143,7 +140,6 @@ public class TextEditor extends JFrame {
         });
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
-        exitMenuItem.setName("MenuExit");
         exitMenuItem.setFont(new Font("Arial", Font.BOLD, 20));
         fileMenu.addSeparator(); // adds line separator between save and exit
         fileMenu.add(exitMenuItem);
@@ -152,12 +148,10 @@ public class TextEditor extends JFrame {
         });
 
         JMenu searchMenu = new JMenu("Search");
-        searchMenu.setName("MenuSearch");
         searchMenu.setMnemonic(KeyEvent.VK_S);
         searchMenu.setFont(new Font("Arial", Font.BOLD, 25));
 
         JMenuItem startSearchItem = new JMenuItem("Start search");
-        startSearchItem.setName("MenuStartSearch");
         startSearchItem.setFont(new Font("Arial", Font.PLAIN, 20));
         searchMenu.add(startSearchItem);
         startSearchItem.addActionListener(actionEvent -> {
@@ -165,7 +159,6 @@ public class TextEditor extends JFrame {
         });
 
         JMenuItem previousSearchItem = new JMenuItem("Previous search");
-        previousSearchItem.setName("MenuPreviousMatch");
         previousSearchItem.setFont(new Font("Arial", Font.PLAIN, 20));
         searchMenu.add(previousSearchItem);
         previousSearchItem.addActionListener(actionEvent -> {
@@ -173,7 +166,6 @@ public class TextEditor extends JFrame {
         });
 
         JMenuItem nextMatchItem = new JMenuItem("Next match");
-        nextMatchItem.setName("MenuNextMatch");
         nextMatchItem.setFont(new Font("Arial", Font.PLAIN, 20));
         searchMenu.add(nextMatchItem);
         nextMatchItem.addActionListener(actionEvent -> {
@@ -181,7 +173,6 @@ public class TextEditor extends JFrame {
         });
 
         JMenuItem regexItem = new JMenuItem("Use regular expressions");
-        regexItem.setName("MenuUseRegExp");
         regexItem.setFont(new Font("Arial", Font.PLAIN, 20));
         searchMenu.add(regexItem);
         regexItem.addActionListener(actionEvent -> {
@@ -198,6 +189,9 @@ public class TextEditor extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * creates event listeners
+     */
     private void createListeners() {
         chooserSaveFile();
         chooserLoadFile();
@@ -207,6 +201,9 @@ public class TextEditor extends JFrame {
         isRegex();
     }
 
+    /**
+     * opens file chooser to save file
+     */
     private void chooserSaveFile() {
         saveButton.addActionListener(actionEvent -> {
             Runnable save = () -> {
@@ -231,6 +228,9 @@ public class TextEditor extends JFrame {
         });
     }
 
+    /**
+     * opens file chooser to load file
+     */
     private void chooserLoadFile() {
         loadButton.addActionListener(actionEvent -> {
             Runnable load = () -> {
@@ -269,6 +269,9 @@ public class TextEditor extends JFrame {
         });
     }
 
+    /**
+     * starts the search algorithm in either regex mode or normal mode
+     */
     private void searchEngine() {
         searchButton.addActionListener(actionEvent -> {
             Runnable task = () -> {
@@ -299,8 +302,15 @@ public class TextEditor extends JFrame {
                         }
                         indexFound.add(index);
                         lengthFound.add(lengthFind);
-                        //System.out.println("index=" + index);
-                        //System.out.println("length=" + lengthFind);
+                    }
+
+                    counter = indexFound.size();
+                    nextCounter = 0;
+
+                    if (counter > 0) {
+                        textArea.setCaretPosition(indexFound.get(0) + lengthFound.get(0));
+                        textArea.select(indexFound.get(0), indexFound.get(0) + lengthFound.get(0));
+                        textArea.grabFocus();
                     }
                 }
             };
@@ -308,6 +318,9 @@ public class TextEditor extends JFrame {
         });
     }
 
+    /**
+     * looks for the previous word or regex that matches the entry
+     */
     private void prevSearch() {
         backArrow.addActionListener(actionEvent -> {
             Runnable task = () -> {
@@ -326,6 +339,9 @@ public class TextEditor extends JFrame {
         });
     }
 
+    /**
+     * looks for the next word matches the entry or regex
+     */
     private void nextSearch() {
         forwardArrow.addActionListener(actionEvent -> {
             Runnable task = () -> {
@@ -343,5 +359,4 @@ public class TextEditor extends JFrame {
             executorService.submit(task);
         });
     }
-
 }
